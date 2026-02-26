@@ -27,7 +27,6 @@
             border: 1px solid #e4e4e7;
             border-radius: 8px;
             background: white;
-            margin-bottom: 8px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
@@ -90,7 +89,7 @@
         <div class="text-xs text-zinc-400 font-mono font-medium border border-zinc-200 px-2 py-0.5 rounded bg-zinc-50">v5.8 Grouped UI</div>
     </header>
 
-    <main class="flex-grow container mx-auto p-4 max-w-5xl space-y-1">
+    <main class="flex-grow container mx-auto p-4 max-w-5xl flex flex-col gap-2">
         
         <div class="accordion-item" id="acc-shortcut">
             <div class="accordion-header" onclick="toggleAccordion('acc-shortcut')">
@@ -101,7 +100,7 @@
                 <i class="fas fa-chevron-down accordion-icon"></i>
             </div>
             <div class="accordion-content">
-                <div class="p-3 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0" id="shortcut-container"></div>
+                <div class="p-3 grid grid-cols-1 gap-x-6 gap-y-0" id="shortcut-container"></div>
             </div>
         </div>
 
@@ -156,7 +155,7 @@
                 <i class="fas fa-chevron-down accordion-icon"></i>
             </div>
             <div class="accordion-content">
-                <div class="p-3 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0" id="ln-container"></div>
+                <div class="p-3 grid grid-cols-1 gap-x-6 gap-y-0" id="ln-container"></div>
             </div>
         </div>
 
@@ -169,7 +168,7 @@
                 <i class="fas fa-chevron-down accordion-icon"></i>
             </div>
             <div class="accordion-content">
-                <div class="p-3 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0" id="nmcli-container"></div>
+                <div class="p-3 grid grid-cols-1 gap-x-6 gap-y-0" id="nmcli-container"></div>
             </div>
         </div>
 
@@ -182,7 +181,7 @@
                 <i class="fas fa-chevron-down accordion-icon"></i>
             </div>
             <div class="accordion-content">
-                <div class="p-3 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0" id="firewall-container"></div>
+                <div class="p-3 grid grid-cols-1 gap-x-6 gap-y-0" id="firewall-container"></div>
             </div>
         </div>
 
@@ -195,7 +194,7 @@
                 <i class="fas fa-chevron-down accordion-icon"></i>
             </div>
             <div class="accordion-content">
-                <div class="p-3 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0" id="system-container"></div>
+                <div class="p-3 grid grid-cols-1 gap-x-6 gap-y-0" id="system-container"></div>
             </div>
         </div>
 
@@ -325,7 +324,7 @@
                 const sectionDiv = document.createElement('div');
                 sectionDiv.innerHTML = `
                     <h3 class="text-xs font-bold text-emerald-600 mb-2 border-b border-zinc-200 pb-1"><i class="fas fa-angle-right mr-1"></i>${sect.category}</h3>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0 vi-grid-inner"></div>
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-0 vi-grid-inner"></div>
                 `;
                 
                 const gridInner = sectionDiv.querySelector('.vi-grid-inner');
@@ -610,7 +609,7 @@ cat << EOF > /etc/issue
 ************************************************************************
 * Access to this computer system and associated 대network, computer      *
 * resources or data is restricted to those authorized by KT Company.   *
-* This computer and related networks, resources or data may only       *
+* This computer and 직related networks, resources or data may only       *
 * be used for business purpose.                                        *
 ************************************************************************
 EOF
@@ -737,7 +736,6 @@ dnf -y groupinstall "Development Tools"`
                 
                 container.appendChild(groupWrapper);
 
-                // 핵심 수정: 위아래 박스와 가로 길이를 100% 맞춘 풀사이즈 점선으로 변경!
                 if (index < groups.length - 1) {
                     const divider = document.createElement('div');
                     divider.className = 'flex justify-center items-center py-6';
