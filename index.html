@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Systems Engineer Toolkit v5.8</title>
+    <title>Systems Engineer Toolkit v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -29,6 +29,8 @@
             background: white;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            /* 헤더가 2단으로 두꺼워졌으니, 앵커 이동 시 가려지지 않게 여백을 6.5rem(약 104px)으로 늘림 */
+            scroll-margin-top: 6.5rem; 
         }
         .accordion-header {
             padding: 1rem 1.25rem;
@@ -77,21 +79,59 @@
         .script-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
         .script-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .script-scroll::-webkit-scrollbar-track { background: transparent; }
+
+        /* 검색 하이라이트 애니메이션 */
+        .search-match { animation: highlight 1.5s ease-out; }
+        @keyframes highlight {
+            0% { background-color: #fef08a; }
+            100% { background-color: transparent; }
+        }
+
+        /* 2단 헤더 가로 스크롤바 숨기기 (모바일용) */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans">
+<body class="min-h-screen flex flex-col font-sans relative">
 
-    <header class="bg-white border-b border-zinc-200 sticky top-0 z-50 h-14 flex items-center justify-between px-6 shadow-sm">
-        <div class="flex items-center gap-2">
-            <i class="fas fa-terminal text-blue-600 text-lg"></i>
-            <h1 class="text-lg font-bold tracking-tight text-zinc-800">Systems Toolkit</h1>
+    <!-- 💡 헤더 영역 2단으로 분리 및 네비게이션 추가 -->
+    <header class="bg-white border-b border-zinc-200 sticky top-0 z-50 flex flex-col shadow-sm">
+        
+        <!-- 1층: 기존 타이틀 및 검색창 -->
+        <div class="h-14 flex items-center px-4 sm:px-6 gap-4 border-b border-zinc-100 w-full">
+            <div class="flex items-center gap-2 shrink-0">
+                <i class="fas fa-terminal text-blue-600 text-lg"></i>
+                <h1 class="text-lg font-bold tracking-tight text-zinc-800 hidden sm:block">Systems Toolkit</h1>
+                <!-- 버전 표시를 타이틀 바로 옆으로 이동 -->
+                <div class="text-[10px] sm:text-xs text-zinc-400 font-mono font-medium border border-zinc-200 px-2 py-0.5 rounded bg-zinc-50 shrink-0 ml-1">v6.0</div>
+            </div>
+
+            <!-- ml-auto를 추가하여 검색창을 오른쪽 끝으로 완벽하게 밀어냄 -->
+            <div class="relative w-full max-w-md ml-auto">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="filterCommands()" placeholder="명령어 검색... (예: 포트)" 
+                       class="w-full bg-zinc-100/80 text-sm border border-transparent focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-full py-1.5 pl-9 pr-4 transition-all outline-none text-zinc-700 placeholder-zinc-400 shadow-inner">
+                <i class="fas fa-times-circle absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-300 hover:text-zinc-500 cursor-pointer hidden" id="clearSearch" onclick="clearSearchInput()"></i>
+            </div>
         </div>
-        <div class="text-xs text-zinc-400 font-mono font-medium border border-zinc-200 px-2 py-0.5 rounded bg-zinc-50">v5.8 Grouped UI</div>
+
+        <!-- 2층: 💡 스크롤 스파이 네비게이션 바 -->
+        <!-- justify-between과 w-full을 추가하여 버튼들을 화면 전체에 일정하게 쫙 펴줌 -->
+        <div class="flex items-center justify-between w-full overflow-x-auto no-scrollbar px-4 sm:px-6 py-2 bg-zinc-50/50" id="headerNav">
+            <!-- 자바스크립트로 클릭 시 해당 위치로 이동 & 아코디언 열기 기능 연결 -->
+            <button onclick="navToSection('acc-shortcut')" data-target="acc-shortcut" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">단축키</button>
+            <button onclick="navToSection('acc-vi')" data-target="acc-vi" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">Vi 마스터</button>
+            <button onclick="navToSection('acc-rhel')" data-target="acc-rhel" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">RHEL 초기설정</button>
+            <button onclick="navToSection('acc-ln')" data-target="acc-ln" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">링크 (ln)</button>
+            <button onclick="navToSection('acc-nmcli')" data-target="acc-nmcli" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">네트워크 (nmcli)</button>
+            <button onclick="navToSection('acc-firewall')" data-target="acc-firewall" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">방화벽</button>
+            <button onclick="navToSection('acc-system')" data-target="acc-system" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all border bg-zinc-100 text-zinc-500 border-transparent hover:bg-zinc-200">시스템/디스크</button>
+        </div>
     </header>
 
-    <main class="flex-grow container mx-auto p-4 max-w-5xl flex flex-col gap-2">
+    <main class="flex-grow container mx-auto p-4 max-w-5xl flex flex-col gap-2 pb-24">
         
-        <div class="accordion-item" id="acc-shortcut">
+        <div class="accordion-item searchable-section" id="acc-shortcut">
             <div class="accordion-header" onclick="toggleAccordion('acc-shortcut')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-keyboard text-amber-500 w-5 text-center"></i>
@@ -104,7 +144,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-vi">
+        <div class="accordion-item searchable-section" id="acc-vi">
             <div class="accordion-header" onclick="toggleAccordion('acc-vi')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-edit text-emerald-500 w-5 text-center"></i>
@@ -117,7 +157,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-rhel">
+        <div class="accordion-item searchable-section" id="acc-rhel">
             <div class="accordion-header" onclick="toggleAccordion('acc-rhel')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-server text-blue-500 w-5 text-center"></i>
@@ -146,7 +186,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-ln">
+        <div class="accordion-item searchable-section" id="acc-ln">
             <div class="accordion-header" onclick="toggleAccordion('acc-ln')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-link text-purple-500 w-5 text-center"></i>
@@ -159,7 +199,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-nmcli">
+        <div class="accordion-item searchable-section" id="acc-nmcli">
             <div class="accordion-header" onclick="toggleAccordion('acc-nmcli')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-network-wired text-orange-500 w-5 text-center"></i>
@@ -172,7 +212,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-firewall">
+        <div class="accordion-item searchable-section" id="acc-firewall">
             <div class="accordion-header" onclick="toggleAccordion('acc-firewall')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-shield-alt text-red-500 w-5 text-center"></i>
@@ -185,7 +225,7 @@
             </div>
         </div>
 
-        <div class="accordion-item" id="acc-system">
+        <div class="accordion-item searchable-section" id="acc-system">
             <div class="accordion-header" onclick="toggleAccordion('acc-system')">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-hdd text-zinc-500 w-5 text-center"></i>
@@ -200,10 +240,36 @@
 
     </main>
 
+    <!-- 플로팅 메뉴 (목차 리스트는 삭제, Top 버튼만 유지) -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <button id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center focus:outline-none opacity-0 invisible">
+            <i class="fas fa-arrow-up text-lg"></i>
+        </button>
+    </div>
+
     <script>
         function toggleAccordion(id) {
             const item = document.getElementById(id);
             item.classList.toggle('active');
+        }
+
+        // 💡 1. 네비게이션 클릭 시 해당 아코디언 열고 스크롤 이동 (버그 수정됨!)
+        function navToSection(id) {
+            const item = document.getElementById(id);
+            
+            // 아코디언이 닫혀있다면 먼저 연다
+            if (!item.classList.contains('active')) {
+                item.classList.add('active');
+                
+                // 🛠️ 핵심 수술 부위: 애니메이션(0.3초)이 끝날 때까지 기다렸다가 스크롤!
+                setTimeout(() => {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 320); // 0.3초 + 약간의 여유(0.02초) 대기
+                
+            } else {
+                // 이미 열려있으면 기다릴 필요 없이 바로 스크롤
+                item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function copyCommand(element) {
@@ -239,7 +305,7 @@
             const cmdToCopy = item.copyCmd !== undefined ? item.copyCmd : item.cmd;
 
             const hoverStyle = isNoCopy ? 'hover:bg-zinc-50 cursor-default' : 'hover:bg-[#f0fdf4] hover:border-[#bbf7d0] cursor-pointer group border border-transparent';
-            row.className = `compact-row rounded ${hoverStyle}`;
+            row.className = `compact-row rounded search-item ${hoverStyle}`;
             
             if (!isNoCopy) {
                 row.setAttribute('data-cmd', cmdToCopy);
@@ -254,11 +320,11 @@
                 <div class="flex flex-col pr-4 w-1/2">
                     <div class="flex items-center gap-2 mb-0.5">
                         <span class="text-[10px] font-bold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200 shrink-0">${item.tag || 'CMD'}</span>
-                        <span class="text-xs font-semibold text-zinc-700 truncate">${item.desc}</span>
+                        <span class="text-xs font-semibold text-zinc-700 truncate search-text">${item.desc}</span>
                     </div>
                 </div>
                 <div class="flex items-center justify-end w-1/2 gap-3">
-                    <code class="text-xs font-mono font-bold text-blue-700 bg-blue-50/70 border border-blue-100 px-2.5 py-1.5 rounded-md truncate max-w-full transition-colors">${item.cmd}</code>
+                    <code class="text-xs font-mono font-bold text-blue-700 bg-blue-50/70 border border-blue-100 px-2.5 py-1.5 rounded-md truncate max-w-full transition-colors search-text">${item.cmd}</code>
                     ${iconHtml}
                 </div>
             `;
@@ -273,6 +339,111 @@
             });
         }
 
+        function filterCommands() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearch');
+            const query = input.value.toLowerCase().trim();
+            const accordions = document.querySelectorAll('.searchable-section');
+
+            if (query.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
+            accordions.forEach(acc => {
+                let hasMatchInAccordion = false;
+                const items = acc.querySelectorAll('.search-item');
+                
+                items.forEach(item => {
+                    const text = item.innerText.toLowerCase();
+                    if (query === '') {
+                        item.style.display = ''; 
+                        item.classList.remove('search-match');
+                    } else if (text.includes(query)) {
+                        item.style.display = ''; 
+                        item.classList.add('search-match'); 
+                        hasMatchInAccordion = true;
+                    } else {
+                        item.style.display = 'none'; 
+                        item.classList.remove('search-match');
+                    }
+                });
+
+                const headerText = acc.querySelector('.accordion-header').innerText.toLowerCase();
+                const isHeaderMatch = query !== '' && headerText.includes(query);
+
+                if (query !== '') {
+                    if (hasMatchInAccordion || isHeaderMatch) {
+                        acc.style.display = 'block';
+                        acc.classList.add('active'); 
+                        if (isHeaderMatch && !hasMatchInAccordion) {
+                             items.forEach(item => item.style.display = '');
+                        }
+                    } else {
+                        acc.style.display = 'none'; 
+                        acc.classList.remove('active');
+                    }
+                } else {
+                    acc.style.display = 'block'; 
+                    acc.classList.remove('active');
+                }
+            });
+        }
+
+        function clearSearchInput() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            filterCommands();
+            input.focus();
+        }
+
+        // 💡 2. 스크롤 위치 감지해서 내비게이션 하이라이트 변경 (Scroll Spy)
+        window.addEventListener('scroll', () => {
+            // Top 버튼 표시 로직
+            const topBtn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 300) {
+                topBtn.classList.remove('opacity-0', 'invisible');
+                topBtn.classList.add('opacity-100', 'visible');
+            } else {
+                topBtn.classList.add('opacity-0', 'invisible');
+                topBtn.classList.remove('opacity-100', 'visible');
+            }
+
+            // 스크롤 스파이 로직
+            const sections = document.querySelectorAll('.accordion-item');
+            const navBtns = document.querySelectorAll('.nav-btn');
+            
+            let currentActiveId = '';
+            
+            // 화면 상단에서 약간 아래쪽(헤더 높이 + 여백)을 기준으로 체크
+            const scrollPosition = window.scrollY + 150; 
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                
+                // 현재 스크롤 위치가 이 섹션의 시작과 끝 사이에 있다면
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    currentActiveId = section.getAttribute('id');
+                }
+            });
+
+            // 내비게이션 버튼 스타일 업데이트
+            navBtns.forEach(btn => {
+                // 일단 모든 버튼을 회색(비활성) 상태로 초기화
+                btn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300', 'shadow-sm');
+                btn.classList.add('bg-zinc-100', 'text-zinc-500', 'border-transparent');
+                
+                // 현재 보고 있는 섹션의 버튼만 파란색(활성)으로 변경
+                if (btn.getAttribute('data-target') === currentActiveId) {
+                    btn.classList.remove('bg-zinc-100', 'text-zinc-500', 'border-transparent');
+                    btn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300', 'shadow-sm');
+                    
+                    // 모바일처럼 버튼이 가로로 숨겨져 있을 때, 현재 활성화된 버튼이 보이도록 가로 스크롤 자동 이동
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        });
+
+        // Data Object & RHEL Script logic
         const shortcutData = [
             { tag: "단어 삭제", cmd: "Ctrl+w", desc: "한 단어 삭제", noCopy: true },
             { tag: "경로 삭제", cmd: "Esc + Backspace", desc: "단어 삭제(경로 칠때 유용)", noCopy: true },
@@ -336,304 +507,9 @@
         }
 
         const rhelRawData = {
-            "7.9": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
-## 1. CIFS 패키지 압축 해제
-tar -zxvf cifs7.9.tar.gz
-
-## 2. 패키지 설치
-rpm -Uvh *.rpm
-
-## 3. 마운트 폴더 생성
-mkdir /nas
-
-## 4. NAS 마운트 (복사 후 비밀번호 입력)
-mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
-
-## 5. ISO 파일 로컬 복사
-cp /nas/Linux/RHEL\\ 7.9/rhel-server-7.9-x86_64-dvd.iso /root
-
-## 6. NAS 마운트 해제
-umount /nas
-
-### ⚙️ [STEP 2] RHEL 기본 환경 구성
-## profile 설정추가
-cat << 'EOF' >> /etc/profile
-export TZ=KST-9
-alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
-alias ls='ls --color=auto --time-style=long-iso'
-alias cachedelete='sysctl -w vm.drop_caches="3"'
-umask 022
-export LANG=en_US.UTF-8
-export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
-export HISTSIZE=10000
-export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
-export GREP_OPTIONS='--color=auto'
-export GREP_COLOR='1;33'
-export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
-export LIBGUESTFS_BACKEND=direct
-EOF
-source /etc/profile
-
-## rhel 7.9 iso 파일 mount
-mount -o loop /root/rhel-server-7.9-x86_64-dvd.iso /media/
-
-## local repo 설정
-cat << EOF>  /etc/yum.repos.d/local-dvd.repo
-[RHEL-DVD]
-name=RHEL7.9
-baseurl=file:///media/
-enabled=1
-gpgcheck=0
-EOF
-
-## 에러 확인 및 캐시 재생성
-mount -a 
-yum clean all
-yum makecache
-
-## file system 재부팅 iso 자동 mount
-echo "/root/rhel-server-7.9-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
-
-## SELinux 비활성화 & 커널 반영
-sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
-echo NOZEROCONF=yes >> /etc/sysconfig/network
-grub2-mkconfig -o /boot/grub2/grub.cfg
-
-## 접속 경고문 세팅
-cat << EOF > /etc/issue
-
-                       WARNING !!!!!!!
-************************************************************************
-* Access to this computer system and associated network, computer      *
-* resources or data is restricted to those authorized by KT Company.   *
-* This computer and related networks, resources or data may only       *
-* be used for business purpose.                                        *
-************************************************************************
-EOF
-\\cp /etc/issue /etc/issue.net
-\\cp /etc/issue /etc/motd
-chmod 755 /sbin/unix_chkpwd
-
-### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 7 전용)
-## 1. 기본 시스템 관리 패키지 (NTP 사용)
-yum -y erase chrony
-yum -y install ntp git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
-systemctl enable --now ntpd
-
-## 2. 오라클 11g 설치 필수 패키지 (11g 전용 구형 라이브러 추가)
-yum -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan compat-libstdc++-33 compat-libcap1
-
-## 3. X11 포워딩 및 GUI 환경 패키지
-yum -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
-
-## 4. KVM 가상화 패키지
-yum -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
-systemctl enable --now libvirtd
-
-## 5. 개발 도구(Development Tools) 패키지
-yum -y groupinstall "Development Tools"`,
-            "8.10": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
-## 1. CIFS 패키지 압축 해제
-tar -zxvf cifs8.10.tar.gz
-
-## 2. 패키지 설치
-rpm -Uvh *.rpm
-
-## 3. 마운트 폴더 생성
-mkdir /nas
-
-## 4. NAS 마운트 (복사 후 비밀번호 입력)
-mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
-
-## 5. ISO 파일 로컬 복사
-cp /nas/Linux/RHEL\\ 8.10/rhel-8.10-x86_64-dvd.iso /root
-
-## 6. NAS 마운트 해제
-umount /nas
-
-### ⚙️ [STEP 2] RHEL 기본 환경 구성
-## profile 설정추가
-cat << 'EOF' >> /etc/profile
-export TZ=KST-9
-alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
-alias ls='ls --color=auto --time-style=long-iso'
-alias cachedelete='sysctl -w vm.drop_caches="3"'
-umask 022
-export LANG=en_US.UTF-8
-export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
-export HISTSIZE=10000
-export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
-export GREP_OPTIONS='--color=auto'
-export GREP_COLOR='1;33'
-export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
-export LIBGUESTFS_BACKEND=direct
-EOF
-source /etc/profile
-
-## rhel 8.10 iso 파일 mount
-mount -o loop /root/rhel-8.10-x86_64-dvd.iso /media/
-
-## local repo 설정
-cat << EOF > /etc/yum.repos.d/local-dvd.repo
-[RHEL-BaseOS]
-name=RHEL8.10-BaseOS
-baseurl=file:///media/BaseOS/
-enabled=1
-gpgcheck=0
-
-[RHEL-AppStream]
-name=RHEL8.10-AppStream
-baseurl=file:///media/AppStream/
-enabled=1
-gpgcheck=0
-EOF
-
-## 에러 확인 및 캐시 재생성
-mount -a 
-dnf clean all
-dnf makecache
-
-## file system 재부팅 iso 자동 mount
-echo "/root/rhel-8.10-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
-
-## SELinux 비활성화 & 커널 반영
-sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
-echo NOZEROCONF=yes >> /etc/sysconfig/network
-grub2-mkconfig -o /boot/grub2/grub.cfg
-
-## 접속 경고문 세팅
-cat << EOF > /etc/issue
-
-                       WARNING !!!!!!!
-************************************************************************
-* Access to this computer system and associated network, computer      *
-* resources or data is restricted to stretch authorized by KT Company. *
-* This computer and related networks, resources or data may only       *
-* be used for business purpose.                                        *
-************************************************************************
-EOF
-\\cp /etc/issue /etc/issue.net
-\\cp /etc/issue /etc/motd
-chmod 755 /sbin/unix_chkpwd
-
-### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 8 전용)
-## 1. 기본 시스템 관리 패키지 (Chrony 사용)
-dnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
-systemctl enable --now chronyd
-
-## 2. 오라클 19c 설치 필수 패키지
-dnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10
-
-## 3. X11 포워딩 및 GUI 환경 패키지
-dnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
-
-## 4. KVM 가상화 패키지
-dnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
-systemctl enable --now libvirtd
-
-## 5. 개발 도구(Development Tools) 패키지
-dnf -y groupinstall "Development Tools"`,
-            "9.4": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
-## 1. CIFS 패키지 압축 해제
-tar -zxvf cifs9.4.tar.gz
-
-## 2. 패키지 설치
-rpm -Uvh *.rpm
-
-## 3. 마운트 폴더 생성
-mkdir /nas
-
-## 4. NAS 마운트 (복사 후 비밀번호 입력)
-mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
-
-## 5. ISO 파일 로컬 복사
-cp /nas/Linux/RHEL\\ 9.4/rhel-9.4-x86_64-dvd.iso /root
-
-## 6. NAS 마운트 해제
-umount /nas
-
-### ⚙️ [STEP 2] RHEL 기본 환경 구성
-## profile 설정추가
-cat << 'EOF' >> /etc/profile
-export TZ=KST-9
-alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
-alias ls='ls --color=auto --time-style=long-iso'
-alias cachedelete='sysctl -w vm.drop_caches="3"'
-umask 022
-export LANG=en_US.UTF-8
-export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
-export HISTSIZE=10000
-export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
-export GREP_OPTIONS='--color=auto'
-export GREP_COLOR='1;33'
-export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
-export LIBGUESTFS_BACKEND=direct
-EOF
-source /etc/profile
-
-## rhel 9.4 iso 파일 mount
-mount -o loop /root/rhel-9.4-x86_64-dvd.iso /media/
-
-## local repo 설정
-cat << EOF > /etc/yum.repos.d/local-dvd.repo
-[RHEL-BaseOS]
-name=RHEL9.4-BaseOS
-baseurl=file:///media/BaseOS/
-enabled=1
-gpgcheck=0
-
-[RHEL-AppStream]
-name=RHEL9.4-AppStream
-baseurl=file:///media/AppStream/
-enabled=1
-gpgcheck=0
-EOF
-
-## 에러 확인 및 캐시 재생성
-mount -a 
-dnf clean all
-dnf makecache
-
-## 파일 시스템 재부팅 iso 자동 mount
-echo "/root/rhel-9.4-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
-
-## SELinux 비활성화 & 커널 반영
-sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
-echo NOZEROCONF=yes >> /etc/sysconfig/network
-grub2-mkconfig -o /boot/grub2/grub.cfg
-
-## 접속 경고문 세팅
-cat << EOF > /etc/issue
-
-                       WARNING !!!!!!!
-************************************************************************
-* Access to this computer system and associated 대network, computer      *
-* resources or data is restricted to those authorized by KT Company.   *
-* This computer and 직related networks, resources or data may only       *
-* be used for business purpose.                                        *
-************************************************************************
-EOF
-\\cp /etc/issue /etc/issue.net
-\\cp /etc/issue /etc/motd
-chmod 755 /sbin/unix_chkpwd
-
-### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 9 전용)
-## 1. 기본 시스템 관리 패키지 (Chrony 사용)
-dnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
-systemctl enable --now chronyd
-
-## 2. 오라클 19c 설치 필수 패키지
-dnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10
-
-## 3. X11 포워딩 및 GUI 환경 패키지
-dnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
-
-## 4. KVM 가상화 패키지
-dnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
-systemctl enable --now libvirtd
-
-## 5. 개발 도구(Development Tools) 패키지
-dnf -y groupinstall "Development Tools"`
+            "7.9": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs7.9.tar.gz\n## 2. 패키지 설치\nrpm -Uvh *.rpm\n## 3. 마운트 폴더 생성\nmkdir /nas\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 7.9/rhel-server-7.9-x86_64-dvd.iso /root\n## 6. NAS 마운트 해제\numount /nas\n### ⚙️ [STEP 2] RHEL 기본 환경 구성\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n## rhel 7.9 iso 파일 mount\nmount -o loop /root/rhel-server-7.9-x86_64-dvd.iso /media/\n## local repo 설정\ncat << EOF>  /etc/yum.repos.d/local-dvd.repo\n[RHEL-DVD]\nname=RHEL7.9\nbaseurl=file:///media/\nenabled=1\ngpgcheck=0\nEOF\n## 에러 확인 및 캐시 재생성\nmount -a \nyum clean all\nyum makecache\n## file system 재부팅 iso 자동 mount\necho "/root/rhel-server-7.9-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n## SELinux 비활성화 & 커널 반영\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n## 접속 경고문 세팅\ncat << EOF > /etc/issue\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated network, computer      *\n* resources or data is restricted to those authorized by KT Company.   *\n* This computer and related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd\n### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 7 전용)\n## 1. 기본 시스템 관리 패키지 (NTP 사용)\nyum -y erase chrony\nyum -y install ntp git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip\nsystemctl enable --now ntpd\n## 2. 오라클 11g 설치 필수 패키지 (11g 전용 구형 라이브러 추가)\nyum -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan compat-libstdc++-33 compat-libcap1\n## 3. X11 포워딩 및 GUI 환경 패키지\nyum -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender\n## 4. KVM 가상화 패키지\nyum -y install qemu-kvm libvirt virt-install virt-manager libvirt-client\nsystemctl enable --now libvirtd\n## 5. 개발 도구(Development Tools) 패키지\nyum -y groupinstall "Development Tools"`,
+            "8.10": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs8.10.tar.gz\n## 2. 패키지 설치\nrpm -Uvh *.rpm\n## 3. 마운트 폴더 생성\nmkdir /nas\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 8.10/rhel-8.10-x86_64-dvd.iso /root\n## 6. NAS 마운트 해제\numount /nas\n### ⚙️ [STEP 2] RHEL 기본 환경 구성\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n## rhel 8.10 iso 파일 mount\nmount -o loop /root/rhel-8.10-x86_64-dvd.iso /media/\n## local repo 설정\ncat << EOF > /etc/yum.repos.d/local-dvd.repo\n[RHEL-BaseOS]\nname=RHEL8.10-BaseOS\nbaseurl=file:///media/BaseOS/\nenabled=1\ngpgcheck=0\n[RHEL-AppStream]\nname=RHEL8.10-AppStream\nbaseurl=file:///media/AppStream/\nenabled=1\ngpgcheck=0\nEOF\n## 에러 확인 및 캐시 재생성\nmount -a \ndnf clean all\ndnf makecache\n## file system 재부팅 iso 자동 mount\necho "/root/rhel-8.10-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n## SELinux 비활성화 & 커널 반영\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n## 접속 경고문 세팅\ncat << EOF > /etc/issue\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated network, computer      *\n* resources or data is restricted to stretch authorized by KT Company. *\n* This computer and related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd\n### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 8 전용)\n## 1. 기본 시스템 관리 패키지 (Chrony 사용)\ndnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip\nsystemctl enable --now chronyd\n## 2. 오라클 19c 설치 필수 패키지\ndnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10\n## 3. X11 포워딩 및 GUI 환경 패키지\ndnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender\n## 4. KVM 가상화 패키지\ndnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client\nsystemctl enable --now libvirtd\n## 5. 개발 도구(Development Tools) 패키지\ndnf -y groupinstall "Development Tools"`,
+            "9.4": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs9.4.tar.gz\n## 2. 패키지 설치\nrpm -Uvh *.rpm\n## 3. 마운트 폴더 생성\nmkdir /nas\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 9.4/rhel-9.4-x86_64-dvd.iso /root\n## 6. NAS 마운트 해제\numount /nas\n### ⚙️ [STEP 2] RHEL 기본 환경 구성\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n## rhel 9.4 iso 파일 mount\nmount -o loop /root/rhel-9.4-x86_64-dvd.iso /media/\n## local repo 설정\ncat << EOF > /etc/yum.repos.d/local-dvd.repo\n[RHEL-BaseOS]\nname=RHEL9.4-BaseOS\nbaseurl=file:///media/BaseOS/\nenabled=1\ngpgcheck=0\n[RHEL-AppStream]\nname=RHEL9.4-AppStream\nbaseurl=file:///media/AppStream/\nenabled=1\ngpgcheck=0\nEOF\n## 에러 확인 및 캐시 재생성\nmount -a \ndnf clean all\ndnf makecache\n## 파일 시스템 재부팅 iso 자동 mount\necho "/root/rhel-9.4-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n## SELinux 비활성화 & 커널 반영\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n## 접속 경고문 세팅\ncat << EOF > /etc/issue\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated 대network, computer      *\n* resources or data is restricted to those authorized by KT Company.   *\n* This computer and 직related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd\n### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 9 전용)\n## 1. 기본 시스템 관리 패키지 (Chrony 사용)\ndnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip\nsystemctl enable --now chronyd\n## 2. 오라클 19c 설치 필수 패키지\ndnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10\n## 3. X11 포워딩 및 GUI 환경 패키지\ndnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender\n## 4. KVM 가상화 패키지\ndnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client\nsystemctl enable --now libvirtd\n## 5. 개발 도구(Development Tools) 패키지\ndnf -y groupinstall "Development Tools"`
         };
 
         function copyRhelScript(element) {
@@ -696,7 +572,7 @@ dnf -y groupinstall "Development Tools"`
 
             groups.forEach((group, index) => {
                 const groupWrapper = document.createElement('div');
-                groupWrapper.className = 'bg-zinc-50 border border-zinc-200 rounded-xl p-4 md:p-6 shadow-sm';
+                groupWrapper.className = 'bg-zinc-50 border border-zinc-200 rounded-xl p-4 md:p-6 shadow-sm search-item';
                 
                 groupWrapper.innerHTML = `
                     <h3 class="font-bold text-zinc-800 text-[1.1rem] mb-4 border-b border-zinc-200/60 pb-3 flex items-center gap-2">
@@ -712,7 +588,7 @@ dnf -y groupinstall "Development Tools"`
                     if (!codeText) return;
                     
                     const div = document.createElement('div');
-                    div.className = 'group border border-zinc-200 bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:border-blue-400 transition-all duration-200';
+                    div.className = 'group border border-zinc-200 bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:border-blue-400 transition-all duration-200 search-item';
                     div.setAttribute('data-cmd', codeText);
                     div.onclick = function() { copyRhelScript(this); };
                     
@@ -743,6 +619,10 @@ dnf -y groupinstall "Development Tools"`
                     container.appendChild(divider);
                 }
             });
+            
+            if (document.getElementById('searchInput').value.trim() !== '') {
+                filterCommands();
+            }
         }
         
         function escapeHtml(text) {
