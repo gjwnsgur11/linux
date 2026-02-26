@@ -51,7 +51,7 @@
             border-top: 1px solid transparent;
         }
         .accordion-item.active .accordion-content {
-            max-height: 8000px; /* 그룹 박스로 인해 길어질 수 있으므로 여유있게 변경 */
+            max-height: 8000px;
             opacity: 1;
             border-top: 1px solid #f4f4f5;
         }
@@ -336,11 +336,305 @@
             });
         }
 
-        // === 2. RHEL 스크립트 데이터 (### 을 통해 그룹화(식판) 설계 적용) ===
         const rhelRawData = {
-            "7.9": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs7.9.tar.gz\n\n## 2. 패키지 설치\nrpm -ivh *.rpm\n\n## 3. 마운트 폴더 생성\nmkdir /nas\n\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 7.9/rhel-server-7.9-x86_64-dvd.iso /root\n\n## 6. NAS 마운트 해제\numount /nas\n\n### ⚙️ [STEP 2] RHEL 기본 환경 및 패키지 설치\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n\n## rhel 7.9 iso 파일 mount\nmount -o loop /root/rhel-server-7.9-x86_64-dvd.iso /media/\n\n## local repo 설정\ncat << EOF>  /etc/yum.repos.d/local-dvd.repo\n[RHEL-DVD]\nname=RHEL7.9\nbaseurl=file:///media/\nenabled=1\ngpgcheck=0\nEOF\n\n##에러 확인\nmount -a \n\n## yum 캐쉬 삭제후 생성\nyum clean all\nyum makecache\n\n## file system 재부팅 iso 자동 mount\necho "/root/rhel-server-7.9-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n\n## SELinux 비활성화\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\n\n## 커널 이미지 생성 reload\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n\n## 패키지 설치 \nyum -y erase chrony\nyum -y install ntp git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo telnet strace sos vsftpd ftp tftp httpd gcc make yum-utils dos2unix ksh bc traceroute binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC xterm glibc.i686 freeipmi lsof numactl libnsl xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers unzip ncurses-devel.x86_64 ncurses-libs libasan liblsan libnsl unzip libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp libnsl wget bc binutils elfutils-libelf elfutils-libelf-devel fontconfig-devel glibc glibc-devel ksh libaio libaio-devel libXrender libX11 libXau libXi libXtst libgcc libstdc++ libstdc++-devel libxcb make smartmontools sysstat unzip net-tools lsof qemu-kvm libvirt virt-install virt-manager libvirt-client\nyum -y groupinstall "Development Tools"\nsystemctl enable --now ntpd\n\n## 접속 경고문\ncat << EOF > /etc/issue\n\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated network, computer      *\n* resources or data is restricted to those authorized by KT Company.   *\n* This computer and related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd`,
-            "8.10": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs8.10.tar.gz\n\n## 2. 패키지 설치\nrpm -ivh *.rpm\n\n## 3. 마운트 폴더 생성\nmkdir /nas\n\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 8.10/rhel-8.10-x86_64-dvd.iso /root\n\n## 6. NAS 마운트 해제\numount /nas\n\n### ⚙️ [STEP 2] RHEL 기본 환경 및 패키지 설치\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n\n## rhel 8.10 iso 파일 mount\nmount -o loop /root/rhel-8.10-x86_64-dvd.iso /media/\n\n## local repo 설정\ncat << EOF > /etc/yum.repos.d/local-dvd.repo\n[RHEL-BaseOS]\nname=RHEL8.10-BaseOS\nbaseurl=file:///media/BaseOS/\nenabled=1\ngpgcheck=0\n\n[RHEL-AppStream]\nname=RHEL8.10-AppStream\nbaseurl=file:///media/AppStream/\nenabled=1\ngpgcheck=0\nEOF\n\n##에러 확인\nmount -a \n\n## dnf 캐쉬 삭제후 생성 \ndnf clean all\ndnf makecache\n\n## file system 재부팅 iso 자동 mount\necho "/root/rhel-8.10-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n\n## SELinux 비활성화\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\n\n## 커널 이미지 생성 reload\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n\n## 패키지 설치 \ndnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo telnet strace sos vsftpd ftp tftp httpd gcc make yum-utils dos2unix ksh bc traceroute binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC xterm glibc.i686 freeipmi lsof numactl libnsl xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers unzip ncurses-devel.x86_64 ncurses-libs libasan liblsan libnsl unzip libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp libnsl wget bc binutils elfutils-libelf elfutils-libelf-devel fontconfig-devel glibc glibc-devel ksh libaio libaio-devel libXrender libX11 libXau libXi libXtst libgcc libstdc++ libstdc++-devel libxcb make smartmontools sysstat unzip net-tools lsof qemu-kvm libvirt virt-install virt-manager libvirt-client\ndnf -y groupinstall "Development Tools"\nsystemctl enable --now chronyd\n\n## 접속 경고문\ncat << EOF > /etc/issue\n\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated network, computer      *\n* resources or data is restricted to stretch authorized by KT Company.   *\n* This computer and related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd`,
-            "9.4": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사\n## 1. CIFS 패키지 압축 해제\ntar -zxvf cifs9.4.tar.gz\n\n## 2. 패키지 설치\nrpm -ivh *.rpm\n\n## 3. 마운트 폴더 생성\nmkdir /nas\n\n## 4. NAS 마운트 (복사 후 비밀번호 입력)\nmount -t cifs //192.168.0.2/heojh /nas -o username=heojh\n\n## 5. ISO 파일 로컬 복사\ncp /nas/Linux/RHEL\\ 9.4/rhel-9.4-x86_64-dvd.iso /root\n\n## 6. NAS 마운트 해제\numount /nas\n\n### ⚙️ [STEP 2] RHEL 기본 환경 및 패키지 설치\n## profile 설정추가\ncat << 'EOF' >> /etc/profile\nexport TZ=KST-9\nalias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'\nalias ls='ls --color=auto --time-style=long-iso'\nalias cachedelete='sysctl -w vm.drop_caches="3"'\numask 022\nexport LANG=en_US.UTF-8\nexport PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '\nexport HISTSIZE=10000\nexport HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "\nexport GREP_OPTIONS='--color=auto'\nexport GREP_COLOR='1;33'\nexport LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"\nexport LIBGUESTFS_BACKEND=direct\nEOF\nsource /etc/profile\n\n## rhel 9.4 iso 파일 mount\nmount -o loop /root/rhel-9.4-x86_64-dvd.iso /media/\n\n## local repo 설정\ncat << EOF > /etc/yum.repos.d/local-dvd.repo\n[RHEL-BaseOS]\nname=RHEL9.4-BaseOS\nbaseurl=file:///media/BaseOS/\nenabled=1\ngpgcheck=0\n\n[RHEL-AppStream]\nname=RHEL9.4-AppStream\nbaseurl=file:///media/AppStream/\nenabled=1\ngpgcheck=0\nEOF\n\n##에러 확인\nmount -a \n\n## dnf 캐쉬 삭제후 생성 \ndnf clean all\ndnf makecache\n\n## file 파system 재부팅 iso 자동 mount\necho "/root/rhel-9.4-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab\n\n## SELinux 비활성화\nsed -i s/"enforcing"/"disabled"/g  /etc/selinux/config\necho NOZEROCONF=yes >> /etc/sysconfig/network\n\n## 커널 이미지 생성 reload\ngrub2-mkconfig -o /boot/grub2/grub.cfg\n\n## 패키지 설치 \ndnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo telnet strace sos vsftpd ftp tftp httpd gcc make yum-utils dos2unix ksh bc traceroute binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC xterm glibc.i686 freeipmi lsof numactl libnsl xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers unzip ncurses-devel.x86_64 ncurses-libs libasan liblsan libnsl unzip libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp libnsl wget bc binutils elfutils-libelf elfutils-libelf-devel fontconfig-devel glibc glibc-devel ksh libaio libaio-devel libXrender libX11 libXau libXi libXtst libgcc libstdc++ libstdc++-devel libxcb make smartmontools sysstat unzip net-tools lsof qemu-kvm libvirt virt-install virt-manager libvirt-client\ndnf -y groupinstall "Development Tools"\nsystemctl enable --now chronyd\n\n## 접속 경고문\ncat << EOF > /etc/issue\n\n                       WARNING !!!!!!!\n************************************************************************\n* Access to this computer system and associated 대network, computer      *\n* resources or data is restricted to those authorized by KT Company.   *\n* This computer and related networks, resources or data may only       *\n* be used for business purpose.                                        *\n************************************************************************\nEOF\n\n\\cp /etc/issue /etc/issue.net\n\\cp /etc/issue /etc/motd\nchmod 755 /sbin/unix_chkpwd`
+            "7.9": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
+## 1. CIFS 패키지 압축 해제
+tar -zxvf cifs7.9.tar.gz
+
+## 2. 패키지 설치
+rpm -Uvh *.rpm
+
+## 3. 마운트 폴더 생성
+mkdir /nas
+
+## 4. NAS 마운트 (복사 후 비밀번호 입력)
+mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
+
+## 5. ISO 파일 로컬 복사
+cp /nas/Linux/RHEL\\ 7.9/rhel-server-7.9-x86_64-dvd.iso /root
+
+## 6. NAS 마운트 해제
+umount /nas
+
+### ⚙️ [STEP 2] RHEL 기본 환경 구성
+## profile 설정추가
+cat << 'EOF' >> /etc/profile
+export TZ=KST-9
+alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
+alias ls='ls --color=auto --time-style=long-iso'
+alias cachedelete='sysctl -w vm.drop_caches="3"'
+umask 022
+export LANG=en_US.UTF-8
+export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
+export HISTSIZE=10000
+export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
+export GREP_OPTIONS='--color=auto'
+export GREP_COLOR='1;33'
+export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
+export LIBGUESTFS_BACKEND=direct
+EOF
+source /etc/profile
+
+## rhel 7.9 iso 파일 mount
+mount -o loop /root/rhel-server-7.9-x86_64-dvd.iso /media/
+
+## local repo 설정
+cat << EOF>  /etc/yum.repos.d/local-dvd.repo
+[RHEL-DVD]
+name=RHEL7.9
+baseurl=file:///media/
+enabled=1
+gpgcheck=0
+EOF
+
+## 에러 확인 및 캐시 재생성
+mount -a 
+yum clean all
+yum makecache
+
+## file system 재부팅 iso 자동 mount
+echo "/root/rhel-server-7.9-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
+
+## SELinux 비활성화 & 커널 반영
+sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
+echo NOZEROCONF=yes >> /etc/sysconfig/network
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+## 접속 경고문 세팅
+cat << EOF > /etc/issue
+
+                       WARNING !!!!!!!
+************************************************************************
+* Access to this computer system and associated network, computer      *
+* resources or data is restricted to those authorized by KT Company.   *
+* This computer and related networks, resources or data may only       *
+* be used for business purpose.                                        *
+************************************************************************
+EOF
+\\cp /etc/issue /etc/issue.net
+\\cp /etc/issue /etc/motd
+chmod 755 /sbin/unix_chkpwd
+
+### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 7 전용)
+## 1. 기본 시스템 관리 패키지 (NTP 사용)
+yum -y erase chrony
+yum -y install ntp git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
+systemctl enable --now ntpd
+
+## 2. 오라클 11g 설치 필수 패키지 (11g 전용 구형 라이브러 추가)
+yum -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan compat-libstdc++-33 compat-libcap1
+
+## 3. X11 포워딩 및 GUI 환경 패키지
+yum -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
+
+## 4. KVM 가상화 패키지
+yum -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
+systemctl enable --now libvirtd
+
+## 5. 개발 도구(Development Tools) 패키지
+yum -y groupinstall "Development Tools"`,
+            "8.10": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
+## 1. CIFS 패키지 압축 해제
+tar -zxvf cifs8.10.tar.gz
+
+## 2. 패키지 설치
+rpm -Uvh *.rpm
+
+## 3. 마운트 폴더 생성
+mkdir /nas
+
+## 4. NAS 마운트 (복사 후 비밀번호 입력)
+mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
+
+## 5. ISO 파일 로컬 복사
+cp /nas/Linux/RHEL\\ 8.10/rhel-8.10-x86_64-dvd.iso /root
+
+## 6. NAS 마운트 해제
+umount /nas
+
+### ⚙️ [STEP 2] RHEL 기본 환경 구성
+## profile 설정추가
+cat << 'EOF' >> /etc/profile
+export TZ=KST-9
+alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
+alias ls='ls --color=auto --time-style=long-iso'
+alias cachedelete='sysctl -w vm.drop_caches="3"'
+umask 022
+export LANG=en_US.UTF-8
+export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
+export HISTSIZE=10000
+export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
+export GREP_OPTIONS='--color=auto'
+export GREP_COLOR='1;33'
+export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
+export LIBGUESTFS_BACKEND=direct
+EOF
+source /etc/profile
+
+## rhel 8.10 iso 파일 mount
+mount -o loop /root/rhel-8.10-x86_64-dvd.iso /media/
+
+## local repo 설정
+cat << EOF > /etc/yum.repos.d/local-dvd.repo
+[RHEL-BaseOS]
+name=RHEL8.10-BaseOS
+baseurl=file:///media/BaseOS/
+enabled=1
+gpgcheck=0
+
+[RHEL-AppStream]
+name=RHEL8.10-AppStream
+baseurl=file:///media/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+
+## 에러 확인 및 캐시 재생성
+mount -a 
+dnf clean all
+dnf makecache
+
+## file system 재부팅 iso 자동 mount
+echo "/root/rhel-8.10-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
+
+## SELinux 비활성화 & 커널 반영
+sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
+echo NOZEROCONF=yes >> /etc/sysconfig/network
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+## 접속 경고문 세팅
+cat << EOF > /etc/issue
+
+                       WARNING !!!!!!!
+************************************************************************
+* Access to this computer system and associated network, computer      *
+* resources or data is restricted to stretch authorized by KT Company. *
+* This computer and related networks, resources or data may only       *
+* be used for business purpose.                                        *
+************************************************************************
+EOF
+\\cp /etc/issue /etc/issue.net
+\\cp /etc/issue /etc/motd
+chmod 755 /sbin/unix_chkpwd
+
+### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 8 전용)
+## 1. 기본 시스템 관리 패키지 (Chrony 사용)
+dnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
+systemctl enable --now chronyd
+
+## 2. 오라클 19c 설치 필수 패키지
+dnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10
+
+## 3. X11 포워딩 및 GUI 환경 패키지
+dnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
+
+## 4. KVM 가상화 패키지
+dnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
+systemctl enable --now libvirtd
+
+## 5. 개발 도구(Development Tools) 패키지
+dnf -y groupinstall "Development Tools"`,
+            "9.4": `### 🗄️ [STEP 1] NAS 마운트 및 ISO 로컬 복사
+## 1. CIFS 패키지 압축 해제
+tar -zxvf cifs9.4.tar.gz
+
+## 2. 패키지 설치
+rpm -Uvh *.rpm
+
+## 3. 마운트 폴더 생성
+mkdir /nas
+
+## 4. NAS 마운트 (복사 후 비밀번호 입력)
+mount -t cifs //192.168.0.2/heojh /nas -o username=heojh
+
+## 5. ISO 파일 로컬 복사
+cp /nas/Linux/RHEL\\ 9.4/rhel-9.4-x86_64-dvd.iso /root
+
+## 6. NAS 마운트 해제
+umount /nas
+
+### ⚙️ [STEP 2] RHEL 기본 환경 구성
+## profile 설정추가
+cat << 'EOF' >> /etc/profile
+export TZ=KST-9
+alias dstat='dstat -t -cdnpmgs --top-bio --top-cpu --top-mem'
+alias ls='ls --color=auto --time-style=long-iso'
+alias cachedelete='sysctl -w vm.drop_caches="3"'
+umask 022
+export LANG=en_US.UTF-8
+export PS1='\\[\\033[01;33m\\][\\u\\[\\033[01;32m\\]@\\h:\\[\\033[00;36m\\]$PWD]\\[\\033[00m\\] \\$ '
+export HISTSIZE=10000
+export HISTTIMEFORMAT="[%Y-%m-%d_%H:%M:%S] "
+export GREP_OPTIONS='--color=auto'
+export GREP_COLOR='1;33'
+export LS_COLORS="no=00:fi=00:di=01;44:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.log=33:*.LOG=33"
+export LIBGUESTFS_BACKEND=direct
+EOF
+source /etc/profile
+
+## rhel 9.4 iso 파일 mount
+mount -o loop /root/rhel-9.4-x86_64-dvd.iso /media/
+
+## local repo 설정
+cat << EOF > /etc/yum.repos.d/local-dvd.repo
+[RHEL-BaseOS]
+name=RHEL9.4-BaseOS
+baseurl=file:///media/BaseOS/
+enabled=1
+gpgcheck=0
+
+[RHEL-AppStream]
+name=RHEL9.4-AppStream
+baseurl=file:///media/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+
+## 에러 확인 및 캐시 재생성
+mount -a 
+dnf clean all
+dnf makecache
+
+## 파일 시스템 재부팅 iso 자동 mount
+echo "/root/rhel-9.4-x86_64-dvd.iso            /media                                        iso9660   defaults   0 0" >> /etc/fstab
+
+## SELinux 비활성화 & 커널 반영
+sed -i s/"enforcing"/"disabled"/g  /etc/selinux/config
+echo NOZEROCONF=yes >> /etc/sysconfig/network
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+## 접속 경고문 세팅
+cat << EOF > /etc/issue
+
+                       WARNING !!!!!!!
+************************************************************************
+* Access to this computer system and associated 대network, computer      *
+* resources or data is restricted to those authorized by KT Company.   *
+* This computer and related networks, resources or data may only       *
+* be used for business purpose.                                        *
+************************************************************************
+EOF
+\\cp /etc/issue /etc/issue.net
+\\cp /etc/issue /etc/motd
+chmod 755 /sbin/unix_chkpwd
+
+### 📦 [STEP 3] 용도별 패키지 설치 (RHEL 9 전용)
+## 1. 기본 시스템 관리 패키지 (Chrony 사용)
+dnf -y install chrony git net-snmp net-snmp-utils hdparm smartmontools ipmitool lm_sensors OpenIPMI net-tools iotop lrzsz dstat pciutils sg3_utils lsscsi sysstat mcelog wget bzip2 tcpdump nmap vim createrepo strace sos httpd yum-utils dos2unix lsof unzip
+systemctl enable --now chronyd
+
+## 2. 오라클 19c 설치 필수 패키지
+dnf -y install gcc make ksh bc traceroute numactl libnsl binutils gcc-c++ glibc glibc-devel libgcc libstdc++ libstdc++-devel libaio libaio-devel unixODBC unixODBC-devel xterm elfutils-libelf elfutils-libelf-devel glibc-common glibc-headers ncurses-devel.x86_64 ncurses-libs libasan liblsan ncurses-compat-libs compat-openssl10
+
+## 3. X11 포워딩 및 GUI 환경 패키지
+dnf -y install glibc.i686 libXext libXtst libX11 libXau libxcb libXi xorg-x11-utils xauth libXp fontconfig-devel libXrender
+
+## 4. KVM 가상화 패키지
+dnf -y install qemu-kvm libvirt virt-install virt-manager libvirt-client
+systemctl enable --now libvirtd
+
+## 5. 개발 도구(Development Tools) 패키지
+dnf -y groupinstall "Development Tools"`
         };
 
         function copyRhelScript(element) {
@@ -378,7 +672,6 @@
             let currentGroup = { title: '기본 설정', blocks: [] };
             let currentBlock = null;
 
-            // '###' 로 큰 그룹(식판)을 나누고, '##' 이나 '#' 로 작은 블록(반찬통)을 나누는 파싱 로직
             lines.forEach(line => {
                 const trimmed = line.trim();
                 if (trimmed.startsWith('###')) {
@@ -402,17 +695,15 @@
             if (currentBlock) currentGroup.blocks.push(currentBlock);
             if (currentGroup.blocks.length > 0) groups.push(currentGroup);
 
-            // 파싱된 그룹들을 순회하며 예쁜 큰 박스 UI 생성
             groups.forEach((group, index) => {
                 const groupWrapper = document.createElement('div');
-                // 큰 박스(식판) 디자인: 연한 회색 배경과 둥근 테두리로 영역 분리
-                groupWrapper.className = 'bg-zinc-100/60 border border-zinc-200 rounded-xl p-4 md:p-5 mb-6 shadow-sm';
+                groupWrapper.className = 'bg-zinc-50 border border-zinc-200 rounded-xl p-4 md:p-6 shadow-sm';
                 
                 groupWrapper.innerHTML = `
-                    <h3 class="font-bold text-zinc-800 text-base mb-4 flex items-center gap-2">
+                    <h3 class="font-bold text-zinc-800 text-[1.1rem] mb-4 border-b border-zinc-200/60 pb-3 flex items-center gap-2">
                         ${group.title}
                     </h3>
-                    <div class="space-y-3 group-blocks-container"></div>
+                    <div class="space-y-4 group-blocks-container"></div>
                 `;
                 
                 const blockContainer = groupWrapper.querySelector('.group-blocks-container');
@@ -422,7 +713,6 @@
                     if (!codeText) return;
                     
                     const div = document.createElement('div');
-                    // 작은 박스(반찬통) 디자인: 기존과 동일한 화이트 테마
                     div.className = 'group border border-zinc-200 bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:border-blue-400 transition-all duration-200';
                     div.setAttribute('data-cmd', codeText);
                     div.onclick = function() { copyRhelScript(this); };
@@ -446,6 +736,14 @@
                 });
                 
                 container.appendChild(groupWrapper);
+
+                // 핵심 수정: 위아래 박스와 가로 길이를 100% 맞춘 풀사이즈 점선으로 변경!
+                if (index < groups.length - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'flex justify-center items-center py-6';
+                    divider.innerHTML = `<div class="w-full border-t-[2px] border-dashed border-zinc-300"></div>`;
+                    container.appendChild(divider);
+                }
             });
         }
         
