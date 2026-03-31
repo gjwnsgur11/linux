@@ -241,8 +241,8 @@ EOF
 mount -a 
 ${pkgMgr} clean all
 ${pkgMgr} makecache
-[TITLE] file system 재부팅 iso 자동 mount
-echo "/root/${isoName}            /media                                        iso9660   defaults   0 0" >> /etc/fstab
+#[TITLE] file system 재부팅 iso 자동 mount
+#echo "/root/${isoName}            /media                                        iso9660   defaults   0 0" >> /etc/fstab
 [TITLE] SELinux 비활성화 및 커널 반영
 sed -i s/"enforcing"/"disabled"/g /etc/selinux/config
 echo NOZEROCONF=yes >> /etc/sysconfig/network
